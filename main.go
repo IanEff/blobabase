@@ -3,6 +3,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -21,7 +22,7 @@ var ErrorNoSuchKey = errors.New("no such key")
 
 type Blobabase struct {
 	Blobs map[string][]byte
-	mu    sync.Mutex
+	mu    sync.RWMutex
 }
 
 func (c *Blobabase) Set(key string, blob []byte) error {
@@ -44,10 +45,7 @@ func (c *Blobabase) Get(key string) ([]byte, error) {
 func (c *Blobabase) Delete(key string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if err := delete(c.Blobs, key); err != nil {
-		log.Printf("coudn't delete key %s: %v", key, err)
-		return err
-	}
+	delete(c.Blobs, key)
 	return nil
 }
 
@@ -74,7 +72,9 @@ func newMux(c *Blobabase) http.Handler {
 		return
 	})
 	mux.HandleFunc("PUT /reset", func(w http.ResponseWriter, r *http.Request) {
-		count := c.Reset()
+		if err := c.Reset(); err != nil {
+			log.Printf("reset failed: %v", err)
+		}
 		if _, err := fmt.Fprintf(w, "The blobabase has been reset."); err != nil {
 			log.Printf("write failed: %v", err)
 			http.Error(w, err.Error(), http.StatusFailedDependency)
@@ -115,16 +115,14 @@ func main() {
 		return
 	}
 
-	if port <= 1000 {
+	if *port <= 1023 {
 		fmt.Println("Not so fast, bucko.")
 	}
-
-
 
 	mux := newMux(&blobabase)
 
 	s := http.Server{
-		Addr:         fmt.Sprintf(":%d", port)
+		Addr:         fmt.Sprintf(":%d", *port),
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 90 * time.Second,
 		IdleTimeout:  120 * time.Second,
