@@ -1,0 +1,15 @@
+# Binaries
+blobabase
+*.test
+*.out
+
+# Coverage
+coverage.*
+
+# Environment
+.env
+.envrc
+.direnv/
+
+# Build output
+bin/
