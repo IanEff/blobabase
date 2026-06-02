@@ -5,11 +5,18 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
 	"sync"
 	"time"
+)
+
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
 )
 
 type Blob struct {
@@ -66,7 +73,7 @@ func newMux(c *Blobabase) http.Handler {
 	mux.HandleFunc("GET /get?{key}", func(w http.ResponseWriter, r *http.Request) {
 		value, err := c.Get(r.PathValue("key"))
 		if err != nil || value == nil {
-			log.Printf("Couldn't retrieve key %s: %w", r.PathValue("key"), err)
+			log.Printf("Couldn't retrieve key %s: %v", r.PathValue("key"), err)
 			// return not found http error
 		}
 		fmt.Fprint(w, value)
@@ -77,10 +84,31 @@ func newMux(c *Blobabase) http.Handler {
 func main() {
 	var blobabase Blobabase
 
+	showHelp := flag.Bool("help", false, "print help and exit")
+	showVersion := flag.Bool("version", false, "print version and exit")
+	port := flag.Int("port", 4000, "set port on which to listen")
+
+	flag.Parse()
+
+	if *showHelp {
+		fmt.Printf("Usage: blobabase [-port <PORT NUMBER>]")
+	}
+
+	if *showVersion {
+		fmt.Printf("blobabase %s (commit %s, build %s)\n", version, commit, date)
+		return
+	}
+
+	if port <= 1000 {
+		fmt.Println("Not so fast, bucko.")
+	}
+
+
+
 	mux := newMux(&blobabase)
 
 	s := http.Server{
-		Addr:         ":4000",
+		Addr:         fmt.Sprintf(":%d", port)
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 90 * time.Second,
 		IdleTimeout:  120 * time.Second,
