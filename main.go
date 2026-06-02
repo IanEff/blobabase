@@ -6,8 +6,8 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"log"
 	"net/http"
+	"slog"
 	"sync"
 	"time"
 )
@@ -68,7 +68,7 @@ func (s *server) handleSet(w http.ResponseWriter, r *http.Request) {
 	}
 	for name, vals := range q {
 		if err := s.store.Set(name, []byte(vals[len(vals)-1])); err != nil {
-			log.Printf("Couldn't Set %s to %s: %v", vals, q, err)
+			slog.Printf("Couldn't Set %s to %s: %v", vals, q, err)
 		}
 	}
 }
@@ -82,6 +82,7 @@ func (s *server) handleGet(w http.ResponseWriter, r *http.Request) {
 	}
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	w.Write(blob)
 }
@@ -102,6 +103,7 @@ func main() {
 
 	if *showHelp {
 		fmt.Printf("Usage: blobabase [-port <PORT NUMBER>]")
+		return
 	}
 
 	if *showVersion {
