@@ -89,7 +89,7 @@ func newMux(c *Blobabase) http.Handler {
 				http.Error(w, err.Error(), http.StatusNotFound)
 			}
 		}
-		if err := fmt.Fprint(w, value); err != nil {
+		if _, err := fmt.Fprint(w, value); err != nil {
 			log.Printf("Couldn't write to line: %v", err)
 			http.Error(w, err.Error(), http.StatusFailedDependency)
 		}
