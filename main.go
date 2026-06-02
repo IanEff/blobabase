@@ -62,44 +62,44 @@ func (c *Blobabase) String() string {
 	return fmt.Sprintf("The count is %d", c.Blobs)
 }
 
-func newMux(c *Blobabase) http.Handler {
+type server struct {
+	store *Blobabase
+}
+
+func (s *server) handleSet(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	if len(q) == 0 {
+		http.Error(w, "no key=value pairs", http.StatusBadRequest)
+		return
+	}
+	for name, vals := range q {
+		if err := s.store.Set(name, []byte(vals[len(vals)-1])); err != nil {
+			log.Printf("Couldn't Set %s to %s: %v", vals, q, err)
+		}
+	}
+}
+
+func (s *server) handleGet(w http.ResponseWriter, r *http.Request) {
+	key := r.URL.Query().Get("key")
+	blob, err := s.store.Get(key)
+	if errors.Is(err, ErrorNoSuchKey) {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	w.Write(blob)
+}
+
+func (s *server) routes() http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("PUT /set?{key}={value}", func(w http.ResponseWriter, r *http.Request) {
-		if err := c.Set(r.PathValue("key"), []byte(r.PathValue("value"))); err != nil {
-			log.Printf("write failed: %v", err)
-			http.Error(w, err.Error(), http.StatusFailedDependency)
-		}
-		return
-	})
-	mux.HandleFunc("PUT /reset", func(w http.ResponseWriter, r *http.Request) {
-		if err := c.Reset(); err != nil {
-			log.Printf("reset failed: %v", err)
-		}
-		if _, err := fmt.Fprintf(w, "The blobabase has been reset."); err != nil {
-			log.Printf("write failed: %v", err)
-			http.Error(w, err.Error(), http.StatusFailedDependency)
-		}
-		return
-	})
-	mux.HandleFunc("GET /get?{key}", func(w http.ResponseWriter, r *http.Request) {
-		value, err := c.Get(r.PathValue("key"))
-		if err != nil || value == nil {
-			log.Printf("Couldn't retrieve key %s: %v", r.PathValue("key"), err)
-			if errors.Is(err, ErrorNoSuchKey) {
-				http.Error(w, err.Error(), http.StatusNotFound)
-			}
-		}
-		if _, err := fmt.Fprint(w, value); err != nil {
-			log.Printf("Couldn't write to line: %v", err)
-			http.Error(w, err.Error(), http.StatusFailedDependency)
-		}
-	})
+	mux.HandleFunc("GET /set", s.handleSet)
+	mux.HandleFunc("GET /get", s.handleGet)
 	return mux
 }
 
 func main() {
-	var blobabase Blobabase
-
 	showHelp := flag.Bool("help", false, "print help and exit")
 	showVersion := flag.Bool("version", false, "print version and exit")
 	port := flag.Int("port", 4000, "set port on which to listen")
@@ -119,14 +119,15 @@ func main() {
 		fmt.Println("Not so fast, bucko.")
 	}
 
-	mux := newMux(&blobabase)
+	store := &Blobabase{Blobs: make(map[string][]byte)}
+	srv := &server{store: store}
 
 	s := http.Server{
 		Addr:         fmt.Sprintf(":%d", *port),
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 90 * time.Second,
 		IdleTimeout:  120 * time.Second,
-		Handler:      mux,
+		Handler:      srv.routes(),
 	}
 	if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		panic(err)
