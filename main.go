@@ -56,12 +56,6 @@ func (c *Blobabase) Reset() error {
 	return nil
 }
 
-func (c *Blobabase) String() string {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	return fmt.Sprintf("The count is %d", c.Blobs)
-}
-
 type server struct {
 	store *Blobabase
 }
