@@ -63,6 +63,42 @@ func TestHandleGetReturnsBlobForKnownKey(t *testing.T) {
 	}
 }
 
+func TestHandleSetThenHandleGetRoundTrips(t *testing.T) {
+	// place
+	s := &server{store: newStore()}
+	setReq := httptest.NewRequest("PUT", "/set?key=hello&value=world", nil)
+	setW := httptest.NewRecorder()
+
+	// act
+	s.handleSet(setW, setReq)
+	getReq := httptest.NewRequest("GET", "/get?key=hello", nil)
+	getW := httptest.NewRecorder()
+	s.handleGet(getW, getReq)
+
+	// assert
+	if setW.Code != http.StatusOK {
+		t.Fatalf("set code: got %d, want %d", setW.Code, http.StatusOK)
+	}
+	if got := strings.TrimSpace(getW.Body.String()); got != "world" {
+		t.Fatalf("body: got %q, want %q", got, "world")
+	}
+}
+
+func TestHandleSetMissingKeyReturns400(t *testing.T) {
+	// place
+	s := &server{store: newStore()}
+	req := httptest.NewRequest("PUT", "/set?value=world", nil)
+	w := httptest.NewRecorder()
+
+	// act
+	s.handleSet(w, req)
+
+	// assert
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("code: got %d, want %d", w.Code, http.StatusBadRequest)
+	}
+}
+
 func TestHandleGetReturns404ForUnknownKey(t *testing.T) {
 	// place
 	s := &server{store: newStore()}

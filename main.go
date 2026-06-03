@@ -49,13 +49,12 @@ type server struct {
 
 func (s *server) handleSet(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
-	if len(q) == 0 {
-		http.Error(w, "no key=value pairs", http.StatusBadRequest)
+	key := q.Get("key")
+	if key == "" {
+		http.Error(w, "missing key", http.StatusBadRequest)
 		return
 	}
-	for name, vals := range q {
-		s.store.Set(name, vals[len(vals)-1])
-	}
+	s.store.Set(key, q.Get("value"))
 }
 
 func (s *server) handleGet(w http.ResponseWriter, r *http.Request) {
