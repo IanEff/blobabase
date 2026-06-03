@@ -75,7 +75,10 @@ func (s *server) handleGet(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Write([]byte(blob))
+
+	if _, err := w.Write([]byte(blob)); err != nil {
+		slog.Error("write response", "err", err, "key", key)
+	}
 }
 
 func logging(next http.Handler) http.Handler {
