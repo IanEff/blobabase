@@ -37,7 +37,7 @@ func (c *Blobabase) Set(key string, blob []byte) error {
 }
 
 func (c *Blobabase) Get(key string) ([]byte, error) {
-	c.mu.Lock()
+	c.mu.RLock()
 	defer c.mu.Unlock()
 	blob, ok := c.Blobs[key]
 	if !ok {
