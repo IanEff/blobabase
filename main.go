@@ -81,8 +81,12 @@ func (s *server) routes() http.Handler {
 
 func logging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		slog.Info("blob in", "method", r.Method, "path", r.URL.Path, "from", r.RemoteAddr)
+		defer func() {
+			slog.Info("blob out", "method", r.Method, "path", r.URL.Path, "took", time.Since(start).String())
+		}()
 		next.ServeHTTP(w, r)
-		slog.Info("request", "method", r.Method, "path", r.URL.Path)
 	})
 }
 
