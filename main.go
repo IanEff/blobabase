@@ -101,16 +101,10 @@ func (s *server) routes() http.Handler {
 func main() {
 	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
 
-	showHelp := flag.Bool("help", false, "print help and exit")
 	showVersion := flag.Bool("version", false, "print version and exit")
 	port := flag.Int("port", 4000, "set port on which to listen")
 
 	flag.Parse()
-
-	if *showHelp {
-		fmt.Printf("Usage: blobabase [-port <PORT NUMBER>]")
-		return
-	}
 
 	if *showVersion {
 		fmt.Printf("blobabase %s (commit %s, build %s)\n", version, commit, date)
