@@ -1,6 +1,8 @@
 # blobabase
 
-This is the starting point for a Recurse Center pair programming interview. The base requirement is in `docs/prompt.md`: an in-memory key/value HTTP server on `localhost:4000` with `/set?key=val` and `/get?key=somekey`. The interview will expand from there — keep the code dead simple so the pairing partner can read and extend it immediately.
+An in-memory key/value HTTP server on `localhost:4000` with `/set?key=val` and `/get?key=somekey`. Keep the code dead simple.
+
+**Do not write or modify code unless explicitly asked.**
 
 Long-running service. Module `github.com/ifurst/blobabase`. Structured `slog` logging, context-driven graceful shutdown.
 
