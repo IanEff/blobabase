@@ -6,7 +6,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"log"
 	"log/slog"
 	"net/http"
 	"os"
@@ -131,5 +130,8 @@ func main() {
 	}
 
 	slog.Info("listening", "addr", s.Addr)
-	log.Fatal(s.ListenAndServe())
+	if err := s.ListenAndServe(); err != nil {
+		slog.Error("server failed", "err", err)
+		os.Exit(1)
+	}
 }
