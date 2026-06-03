@@ -19,5 +19,5 @@ make build
 ## CI locally
 
 ```sh
-make ci    # fmt-check → vet → lint → test → build
+make ci    # fmt → vet → test → build
 ```

@@ -1,6 +1,6 @@
 # blobabase
 
-An in-memory key/value HTTP server on `localhost:4000` with `/set?key=val` and `/get?key=somekey`. Keep the code dead simple.
+An in-memory key/value HTTP server on `localhost:4000`: `PUT /set?key=somekey&value=blob` to store, `GET /get?key=somekey` to read. Keep the code dead simple.
 
 **Do not write or modify code unless explicitly asked.**
 

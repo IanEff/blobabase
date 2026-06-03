@@ -22,7 +22,7 @@ test:
 	go test -race ./...
 
 build:
-	go build $(LDFLAGS) -o $(PROJECT) .
+	go build $(LDFLAGS) -o ./bin/$(PROJECT) .
 
 run:
 	go run .
@@ -31,4 +31,4 @@ tidy:
 	go mod tidy
 
 clean:
-	rm -f blobabase
+	rm -f bin/blobabase
