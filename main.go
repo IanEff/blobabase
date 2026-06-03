@@ -74,7 +74,7 @@ func (s *server) handleGet(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) routes() http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /set", s.handleSet)
+	mux.HandleFunc("PUT /set", s.handleSet)
 	mux.HandleFunc("GET /get", s.handleGet)
 	return logging(mux)
 }
