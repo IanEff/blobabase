@@ -47,6 +47,13 @@ type server struct {
 	store *Blobabase
 }
 
+func (s *server) routes() http.Handler {
+	mux := http.NewServeMux()
+	mux.HandleFunc("PUT /set", s.handleSet)
+	mux.HandleFunc("GET /get", s.handleGet)
+	return logging(mux)
+}
+
 func (s *server) handleSet(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	key := q.Get("key")
@@ -69,13 +76,6 @@ func (s *server) handleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Write([]byte(blob))
-}
-
-func (s *server) routes() http.Handler {
-	mux := http.NewServeMux()
-	mux.HandleFunc("PUT /set", s.handleSet)
-	mux.HandleFunc("GET /get", s.handleGet)
-	return logging(mux)
 }
 
 func logging(next http.Handler) http.Handler {
