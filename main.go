@@ -3,16 +3,14 @@
 package main
 
 import (
-	"context"
 	"errors"
 	"flag"
 	"fmt"
+	"log"
 	"log/slog"
 	"net/http"
 	"os"
-	"os/signal"
 	"sync"
-	"syscall"
 	"time"
 )
 
@@ -71,9 +69,7 @@ func (s *server) handleSet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	for name, vals := range q {
-		if err := s.store.Set(name, []byte(vals[len(vals)-1])); err != nil {
-			slog.Error("set failed", "key", name, "err", err)
-		}
+		s.store.Set(name, []byte(vals[len(vals)-1]))
 	}
 }
 
@@ -95,7 +91,14 @@ func (s *server) routes() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /set", s.handleSet)
 	mux.HandleFunc("GET /get", s.handleGet)
-	return mux
+	return logging(mux)
+}
+
+func logging(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		next.ServeHTTP(w, r)
+		slog.Info("request", "method", r.Method, "path", r.URL.Path)
+	})
 }
 
 func main() {
@@ -112,8 +115,7 @@ func main() {
 	}
 
 	if *port <= 1023 {
-		fmt.Println("Not so fast, bucko.")
-		slog.Info("cannot bind to privileged port: %d")
+		slog.Error("cannot bind to privileged port", "port", *port)
 		os.Exit(1)
 	}
 
@@ -128,25 +130,6 @@ func main() {
 		Handler:      srv.routes(),
 	}
 
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
-
-	go func() {
-		slog.Info("listening", "addr", s.Addr)
-		if err := s.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			slog.Error("server failed", "err", err)
-			stop() // unblock main on failure
-		}
-	}()
-
-	<-ctx.Done()
-	slog.Info("shutdown signal received, draining connections")
-
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	if err := s.Shutdown(shutdownCtx); err != nil {
-		slog.Error("graceful shutdown failed", "err", err)
-		os.Exit(1)
-	}
-	slog.Info("shutdown complete")
+	slog.Info("listening", "addr", s.Addr)
+	log.Fatal(s.ListenAndServe())
 }
