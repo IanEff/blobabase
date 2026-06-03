@@ -22,23 +22,23 @@ var (
 var ErrorNoSuchKey = errors.New("no such key")
 
 type Blobabase struct {
-	Blobs map[string][]byte
+	Blobs map[string]string
 	mu    sync.RWMutex
 }
 
-func (c *Blobabase) Set(key string, blob []byte) error {
+func (c *Blobabase) Set(key, blob string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.Blobs[key] = blob
 	return nil
 }
 
-func (c *Blobabase) Get(key string) ([]byte, error) {
+func (c *Blobabase) Get(key string) (string, error) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	blob, ok := c.Blobs[key]
 	if !ok {
-		return nil, ErrorNoSuchKey
+		return "", ErrorNoSuchKey
 	}
 	return blob, nil
 }
@@ -54,7 +54,7 @@ func (s *server) handleSet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	for name, vals := range q {
-		s.store.Set(name, []byte(vals[len(vals)-1]))
+		s.store.Set(name, vals[len(vals)-1])
 	}
 }
 
@@ -69,7 +69,7 @@ func (s *server) handleGet(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Write(blob)
+	w.Write([]byte(blob))
 }
 
 func (s *server) routes() http.Handler {
@@ -104,7 +104,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	store := &Blobabase{Blobs: make(map[string][]byte)}
+	store := &Blobabase{Blobs: make(map[string]string)}
 	srv := &server{store: store}
 
 	s := http.Server{
