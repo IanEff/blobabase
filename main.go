@@ -35,26 +35,12 @@ func (c *Blobabase) Set(key string, blob []byte) error {
 
 func (c *Blobabase) Get(key string) ([]byte, error) {
 	c.mu.RLock()
-	defer c.mu.Unlock()
+	defer c.mu.RUnlock()
 	blob, ok := c.Blobs[key]
 	if !ok {
 		return nil, ErrorNoSuchKey
 	}
 	return blob, nil
-}
-
-func (c *Blobabase) Delete(key string) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	delete(c.Blobs, key)
-	return nil
-}
-
-func (c *Blobabase) Reset() error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.Blobs = make(map[string][]byte)
-	return nil
 }
 
 type server struct {
@@ -124,7 +110,7 @@ func main() {
 	s := http.Server{
 		Addr:         fmt.Sprintf(":%d", *port),
 		ReadTimeout:  30 * time.Second,
-		WriteTimeout: 90 * time.Second,
+		WriteTimeout: 60 * time.Second,
 		IdleTimeout:  120 * time.Second,
 		Handler:      srv.routes(),
 	}
