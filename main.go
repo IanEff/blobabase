@@ -23,19 +23,19 @@ var ErrorNoSuchKey = errors.New("no such key")
 
 type Blobabase struct {
 	Blobs map[string]string
-	mu    sync.RWMutex
+	Mu    sync.RWMutex
 }
 
 func (c *Blobabase) Set(key, blob string) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	c.Mu.Lock()
+	defer c.Mu.Unlock()
 	c.Blobs[key] = blob
 	return nil
 }
 
 func (c *Blobabase) Get(key string) (string, error) {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
+	c.Mu.RLock()
+	defer c.Mu.RUnlock()
 	blob, ok := c.Blobs[key]
 	if !ok {
 		return "", ErrorNoSuchKey
