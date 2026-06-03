@@ -3,12 +3,16 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"fmt"
+	"log/slog"
 	"net/http"
-	"slog"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 )
 
@@ -68,7 +72,7 @@ func (s *server) handleSet(w http.ResponseWriter, r *http.Request) {
 	}
 	for name, vals := range q {
 		if err := s.store.Set(name, []byte(vals[len(vals)-1])); err != nil {
-			slog.Printf("Couldn't Set %s to %s: %v", vals, q, err)
+			slog.Error("set failed", "key", name, "err", err)
 		}
 	}
 }
@@ -95,6 +99,8 @@ func (s *server) routes() http.Handler {
 }
 
 func main() {
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
+
 	showHelp := flag.Bool("help", false, "print help and exit")
 	showVersion := flag.Bool("version", false, "print version and exit")
 	port := flag.Int("port", 4000, "set port on which to listen")
@@ -113,6 +119,8 @@ func main() {
 
 	if *port <= 1023 {
 		fmt.Println("Not so fast, bucko.")
+		slog.Info("cannot bind to privileged port: %d")
+		os.Exit(1)
 	}
 
 	store := &Blobabase{Blobs: make(map[string][]byte)}
@@ -125,7 +133,26 @@ func main() {
 		IdleTimeout:  120 * time.Second,
 		Handler:      srv.routes(),
 	}
-	if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		panic(err)
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	go func() {
+		slog.Info("listening", "addr", s.Addr)
+		if err := s.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			slog.Error("server failed", "err", err)
+			stop() // unblock main on failure
+		}
+	}()
+
+	<-ctx.Done()
+	slog.Info("shutdown signal received, draining connections")
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := s.Shutdown(shutdownCtx); err != nil {
+		slog.Error("graceful shutdown failed", "err", err)
+		os.Exit(1)
 	}
+	slog.Info("shutdown complete")
 }
