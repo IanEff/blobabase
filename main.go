@@ -122,7 +122,7 @@ func main() {
 	}
 
 	slog.Info("listening", "addr", s.Addr)
-	if err := s.ListenAndServe(); err != nil {
+	if err := s.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		slog.Error("server failed", "err", err)
 		os.Exit(1)
 	}
