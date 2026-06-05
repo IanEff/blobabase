@@ -9,7 +9,7 @@ import (
 )
 
 func newStore() *Blobabase {
-	return &Blobabase{Blobs: make(map[string]string)}
+	return &Blobabase{blobs: make(map[string]string)}
 }
 
 func TestSetThenGetReturnsTheStoredBlob(t *testing.T) {
@@ -21,7 +21,6 @@ func TestSetThenGetReturnsTheStoredBlob(t *testing.T) {
 		t.Fatalf("Set: %v", err)
 	}
 	got, err := b.Get("hello")
-
 	// assert
 	if err != nil {
 		t.Fatalf("Get: %v", err)
