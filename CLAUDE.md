@@ -4,7 +4,7 @@ An in-memory key/value HTTP server on `localhost:4000`: `PUT /set?key=somekey&va
 
 **Do not write or modify code unless explicitly asked.**
 
-Long-running service. Module `github.com/ifurst/blobabase`. Structured `slog` logging, context-driven graceful shutdown.
+Long-running service. Module `github.com/ianeff/blobabase`. Structured `slog` logging, context-driven graceful shutdown.
 
 ## Definition of done
 - `make ci` is green: fmt → vet → test (`-race`) → build. Don't call work done on a red bar.
