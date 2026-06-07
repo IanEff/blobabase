@@ -1,3 +1,3 @@
-module github.com/ifurst/blobabase
+module github.com/ianeff/blobabase
 
 go 1.26
