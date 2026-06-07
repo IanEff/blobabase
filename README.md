@@ -77,31 +77,3 @@ curl -i 'http://localhost:4000/get?key=nope'
 curl -X PUT 'http://localhost:4000/set?key=foo&value=bar'
 curl 'http://localhost:4000/get?key=foo'   # -> bar
 ```
-
-## Health check — `GET /healthz`
-
-Returns `200 OK` with an empty body whenever the server is up. Handy for
-liveness/readiness probes.
-
-```sh
-curl -i http://localhost:4000/healthz
-# HTTP/1.1 200 OK
-```
-
-To verify health from a script, check only the status code and avoid the body:
-
-```sh
-curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:4000/healthz
-# 200
-```
-
-`-f` makes curl exit non-zero on a 4xx/5xx response, so this doubles as a quick
-pass/fail gate:
-
-```sh
-if curl -fsS -o /dev/null http://localhost:4000/healthz; then
-  echo "blobabase is healthy"
-else
-  echo "blobabase is down"
-fi
-```

@@ -26,17 +26,17 @@ type Blobabase struct {
 	mu    sync.RWMutex
 }
 
-func (c *Blobabase) Set(key, blob string) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.blobs[key] = blob
+func (b *Blobabase) Set(key, blob string) error {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	b.blobs[key] = blob
 	return nil
 }
 
-func (c *Blobabase) Get(key string) (string, error) {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	blob, ok := c.blobs[key]
+func (b *Blobabase) Get(key string) (string, error) {
+	b.mu.RLock()
+	defer b.mu.RUnlock()
+	blob, ok := b.blobs[key]
 	if !ok {
 		return "", ErrorNoSuchKey
 	}
@@ -67,6 +67,8 @@ func (s *server) handleSet(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	// blind write-- so 204 "success, no body"
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (s *server) handleGet(w http.ResponseWriter, r *http.Request) {

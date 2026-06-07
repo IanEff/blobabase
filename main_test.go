@@ -75,7 +75,7 @@ func TestHandleSetThenHandleGetRoundTrips(t *testing.T) {
 	s.handleGet(getW, getReq)
 
 	// assert
-	if setW.Code != http.StatusOK {
+	if setW.Code != http.StatusNoContent {
 		t.Fatalf("set code: got %d, want %d", setW.Code, http.StatusOK)
 	}
 	if got := strings.TrimSpace(getW.Body.String()); got != "world" {
