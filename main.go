@@ -57,11 +57,12 @@ func (s *server) routes() http.Handler {
 func (s *server) handleSet(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	key := q.Get("key")
-	if key == "" {
-		http.Error(w, "missing key", http.StatusBadRequest)
+	value := q.Get("value")
+	if key == "" || value == "" {
+		http.Error(w, "key and value are required", http.StatusBadRequest)
 		return
 	}
-	if err := s.store.Set(key, q.Get("value")); err != nil {
+	if err := s.store.Set(key, value); err != nil {
 		slog.Error("cannot write key to store", "key", key, "err", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -70,14 +71,17 @@ func (s *server) handleSet(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) handleGet(w http.ResponseWriter, r *http.Request) {
 	key := r.URL.Query().Get("key")
+	if key == "" {
+		http.Error(w, "key too short", http.StatusBadRequest)
+		return
+	}
 	blob, err := s.store.Get(key)
 	if errors.Is(err, ErrorNoSuchKey) {
-		slog.Error("no such key", "key", key, "err", err)
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 	if err != nil {
-		slog.Error("cannot write key to store", "key", key, "err", err)
+		slog.Error("cannot read key from store", "key", key, "err", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
