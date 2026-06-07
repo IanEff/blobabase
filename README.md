@@ -29,8 +29,8 @@ examples assume that address.
 
 ### Store a blob — `PUT /set`
 
-Takes `key` and `value` query params. Returns `200 OK` with an empty body on
-success, `400 Bad Request` if `key` is missing.
+Takes `key` and `value` query params. Returns `204 No Content` on success,
+`400 Bad Request` if either `key` or `value` is missing.
 
 ```sh
 curl -X PUT 'http://localhost:4000/set?key=greeting&value=hello'
@@ -45,12 +45,12 @@ curl -X PUT -G 'http://localhost:4000/set' \
   --data-urlencode 'value=hello, world!'
 ```
 
-An empty value is allowed; only a missing `key` is rejected:
+Both `key` and `value` are required; omitting either returns `400`:
 
 ```sh
-curl -i -X PUT 'http://localhost:4000/set'
+curl -i -X PUT 'http://localhost:4000/set?value=hello'
 # HTTP/1.1 400 Bad Request
-# missing key
+# key and value are required
 ```
 
 ### Read a blob — `GET /get`
