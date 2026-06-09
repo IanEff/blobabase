@@ -12,3 +12,7 @@ coverage.*
 
 # Build output
 bin/
+
+# Editor / local tooling
+.zed/
+CLAUDE.md
