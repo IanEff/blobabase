@@ -55,9 +55,8 @@ func (s *server) routes() http.Handler {
 }
 
 func (s *server) handleSet(w http.ResponseWriter, r *http.Request) {
-	q := r.URL.Query()
-	key := q.Get("key")
-	value := q.Get("value")
+	key := r.URL.Query().Get("key")
+	value := r.URL.Query().Get("value")
 	if key == "" || value == "" {
 		http.Error(w, "key and value are required", http.StatusBadRequest)
 		return
