@@ -86,13 +86,13 @@ func TestHandleSetThenHandleGetRoundTrips(t *testing.T) {
 func TestRoutesRoundTripsThroughTheMux(t *testing.T) {
 	// place
 	s := &server{store: newStore()}
-	mux := s.routes()
+	handler := s.routes()
 	setW := httptest.NewRecorder()
 	getW := httptest.NewRecorder()
 
 	// act
-	mux.ServeHTTP(setW, httptest.NewRequest("PUT", "/set?key=hello&value=world", nil))
-	mux.ServeHTTP(getW, httptest.NewRequest("GET", "/get?key=hello", nil))
+	handler.ServeHTTP(setW, httptest.NewRequest("PUT", "/set?key=hello&value=world", nil))
+	handler.ServeHTTP(getW, httptest.NewRequest("GET", "/get?key=hello", nil))
 
 	// assert
 	if setW.Code != http.StatusNoContent {
