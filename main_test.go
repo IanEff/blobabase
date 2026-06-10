@@ -76,7 +76,27 @@ func TestHandleSetThenHandleGetRoundTrips(t *testing.T) {
 
 	// assert
 	if setW.Code != http.StatusNoContent {
-		t.Fatalf("set code: got %d, want %d", setW.Code, http.StatusOK)
+		t.Fatalf("set code: got %d, want %d", setW.Code, http.StatusNoContent)
+	}
+	if got := strings.TrimSpace(getW.Body.String()); got != "world" {
+		t.Fatalf("body: got %q, want %q", got, "world")
+	}
+}
+
+func TestRoutesRoundTripsThroughTheMux(t *testing.T) {
+	// place
+	s := &server{store: newStore()}
+	mux := s.routes()
+	setW := httptest.NewRecorder()
+	getW := httptest.NewRecorder()
+
+	// act
+	mux.ServeHTTP(setW, httptest.NewRequest("PUT", "/set?key=hello&value=world", nil))
+	mux.ServeHTTP(getW, httptest.NewRequest("GET", "/get?key=hello", nil))
+
+	// assert
+	if setW.Code != http.StatusNoContent {
+		t.Fatalf("set code: got %d, want %d", setW.Code, http.StatusNoContent)
 	}
 	if got := strings.TrimSpace(getW.Body.String()); got != "world" {
 		t.Fatalf("body: got %q, want %q", got, "world")
