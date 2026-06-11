@@ -27,30 +27,29 @@ make ci    # fmt → vet → test → build
 The server listens on `localhost:4000` by default (override with `-port`). All
 examples assume that address.
 
-### Store a blob — `PUT /set`
+### Store a blob — `/set`
 
-Takes `key` and `value` query params. Returns `204 No Content` on success,
-`400 Bad Request` if either `key` or `value` is missing.
+Each query pair is stored as a key/value. Returns `204 No Content` on
+success, `400 Bad Request` if no query pair is passed. Any method works, so
+you can hit it from a browser address bar.
 
 ```sh
-curl -X PUT 'http://localhost:4000/set?key=greeting&value=hello'
+curl 'http://localhost:4000/set?greeting=hello'
 ```
 
 The value is taken verbatim from the query string, so URL-encode anything with
 spaces or special characters. `--data-urlencode` makes this painless:
 
 ```sh
-curl -X PUT -G 'http://localhost:4000/set' \
-  --data-urlencode 'key=greeting' \
-  --data-urlencode 'value=hello, world!'
+curl -G 'http://localhost:4000/set' --data-urlencode 'greeting=hello, world!'
 ```
 
-Both `key` and `value` are required; omitting either returns `400`:
+At least one pair is required; passing none returns `400`:
 
 ```sh
-curl -i -X PUT 'http://localhost:4000/set?value=hello'
+curl -i 'http://localhost:4000/set'
 # HTTP/1.1 400 Bad Request
-# key and value are required
+# a key=value query parameter is required
 ```
 
 ### Read a blob — `GET /get`
@@ -74,6 +73,6 @@ curl -i 'http://localhost:4000/get?key=nope'
 ### Round-trip in one go
 
 ```sh
-curl -X PUT 'http://localhost:4000/set?key=foo&value=bar'
+curl 'http://localhost:4000/set?foo=bar'
 curl 'http://localhost:4000/get?key=foo'   # -> bar
 ```

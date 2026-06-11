@@ -49,22 +49,29 @@ type server struct {
 
 func (s *server) routes() http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("PUT /set", s.handleSet)
+	mux.HandleFunc("/set", s.handleSet)
 	mux.HandleFunc("GET /get", s.handleGet)
 	return logging(mux)
 }
 
+// handleSet stores each query pair as a key/value: /set?somekey=somevalue.
 func (s *server) handleSet(w http.ResponseWriter, r *http.Request) {
-	key := r.URL.Query().Get("key")
-	value := r.URL.Query().Get("value")
-	if key == "" || value == "" {
-		http.Error(w, "key and value are required", http.StatusBadRequest)
+	pairs := r.URL.Query()
+	if len(pairs) == 0 {
+		http.Error(w, "a key=value query parameter is required", http.StatusBadRequest)
 		return
 	}
-	if err := s.store.Set(key, value); err != nil {
-		slog.Error("cannot write key to store", "key", key, "err", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	for key, values := range pairs {
+		if key == "" {
+			http.Error(w, "key must not be empty", http.StatusBadRequest)
+			return
+		}
+		// repeated params behave like sequential sets: last one wins
+		if err := s.store.Set(key, values[len(values)-1]); err != nil {
+			slog.Error("cannot write key to store", "key", key, "err", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 	// blind write-- so 204 "success, no body"
 	w.WriteHeader(http.StatusNoContent)
@@ -73,7 +80,7 @@ func (s *server) handleSet(w http.ResponseWriter, r *http.Request) {
 func (s *server) handleGet(w http.ResponseWriter, r *http.Request) {
 	key := r.URL.Query().Get("key")
 	if key == "" {
-		http.Error(w, "key too short", http.StatusBadRequest)
+		http.Error(w, "key is required", http.StatusBadRequest)
 		return
 	}
 	blob, err := s.store.Get(key)

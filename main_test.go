@@ -65,7 +65,7 @@ func TestHandleGetReturnsBlobForKnownKey(t *testing.T) {
 func TestHandleSetThenHandleGetRoundTrips(t *testing.T) {
 	// place
 	s := &server{store: newStore()}
-	setReq := httptest.NewRequest("PUT", "/set?key=hello&value=world", nil)
+	setReq := httptest.NewRequest("GET", "/set?hello=world", nil)
 	setW := httptest.NewRecorder()
 
 	// act
@@ -91,7 +91,7 @@ func TestRoutesRoundTripsThroughTheMux(t *testing.T) {
 	getW := httptest.NewRecorder()
 
 	// act
-	handler.ServeHTTP(setW, httptest.NewRequest("PUT", "/set?key=hello&value=world", nil))
+	handler.ServeHTTP(setW, httptest.NewRequest("GET", "/set?hello=world", nil))
 	handler.ServeHTTP(getW, httptest.NewRequest("GET", "/get?key=hello", nil))
 
 	// assert
@@ -103,10 +103,10 @@ func TestRoutesRoundTripsThroughTheMux(t *testing.T) {
 	}
 }
 
-func TestHandleSetMissingKeyReturns400(t *testing.T) {
+func TestHandleSetWithNoQueryReturns400(t *testing.T) {
 	// place
 	s := &server{store: newStore()}
-	req := httptest.NewRequest("PUT", "/set?value=world", nil)
+	req := httptest.NewRequest("GET", "/set", nil)
 	w := httptest.NewRecorder()
 
 	// act
