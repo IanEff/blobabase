@@ -66,7 +66,7 @@ func (s *server) handleSet(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "key must not be empty", http.StatusBadRequest)
 			return
 		}
-		// repeated params behave like sequential sets: last one wins
+		// for a repeated key, last value wins
 		if err := s.store.Set(key, values[len(values)-1]); err != nil {
 			slog.Error("cannot write key to store", "key", key, "err", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
