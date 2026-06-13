@@ -1,0 +1,39 @@
+[
+  {
+    "label": "ci",
+    "command": "make ci",
+    "tags": ["build"]
+  },
+  {
+    "label": "test",
+    "command": "make test",
+    "tags": ["test"]
+  },
+  {
+    "label": "test (verbose)",
+    "command": "go test -race -v ./...",
+    "tags": ["test"]
+  },
+  {
+    "label": "build",
+    "command": "make build",
+    "tags": ["build"]
+  },
+  {
+    "label": "run",
+    "command": "make run",
+    "tags": ["run"]
+  },
+  {
+    "label": "fmt",
+    "command": "make fmt"
+  },
+  {
+    "label": "vet",
+    "command": "make vet"
+  },
+  {
+    "label": "tidy",
+    "command": "make tidy"
+  }
+]
